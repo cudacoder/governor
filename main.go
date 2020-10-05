@@ -22,10 +22,10 @@ func main() {
 		clearCmd := exec.Command("clear")
 		clearCmd.Stdout = os.Stdout
 		clearCmd.Run()
-        containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-        if err != nil {
-            panic(err)
-        }
+		containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+		if err != nil {
+			panic(err)
+		}
 		for _, container := range containers {
 			cid := container.ID
 			cname := container.Names[0][1:]
