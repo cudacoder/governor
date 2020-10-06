@@ -13,7 +13,7 @@ import (
 	"github.com/gizak/termui/v3/widgets"
 )
 
-func RestartDockerContainer(cli client.Client, ctx context.Context, cid string) {
+func RestartDockerContainer(cli *client.Client, ctx context.Context, cid string) {
 	duration, _ := time.ParseDuration("1s")
 	cli.ContainerRestart(ctx, cid, &duration)
 }
