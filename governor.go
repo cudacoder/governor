@@ -1,13 +1,13 @@
 package main
 
 import (
-    // "fmt"
+	// "fmt"
+	"bufio"
 	"context"
-    "strings"
 	"log"
 	"sort"
+	"strings"
 	"time"
-    "bufio"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -96,9 +96,9 @@ func main() {
 			switch e.ID {
 			case "q", "<C-c>":
 				return
-            case "r":
-                s := strings.Fields(l.Rows[l.SelectedRow])[0]
-                RestartDockerContainer(cli, ctx, s)
+			case "r":
+				s := strings.Fields(l.Rows[l.SelectedRow])[0]
+				RestartDockerContainer(cli, ctx, s)
 			case "j":
 				l.ScrollDown()
 			case "k":
@@ -116,26 +116,26 @@ func main() {
 			}
 			ui.Render(grid)
 		case <-ticker:
-            clogs := []string{}
+			clogs := []string{}
 			l.Rows = ContainerStatusArray(cli, ctx)
-            selected := strings.Fields(l.Rows[l.SelectedRow])[0]
-            reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true})
-            if err != nil {
-                log.Fatal(err)
-            }
-            defer reader.Close()
+			selected := strings.Fields(l.Rows[l.SelectedRow])[0]
+			reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true})
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer reader.Close()
 
-            scanner := bufio.NewScanner(reader)
-            for scanner.Scan() {
-                clogs = append(clogs, scanner.Text())
-            }
-            for i := len(clogs)/2-1; i >= 0; i-- {
-                opp := len(clogs)-1-i
-                clogs[i], clogs[opp] = clogs[opp], clogs[i]
-            }
-            if len(clogs) != 0 {
-                p2.Text = strings.Join(clogs[:5], "\n")
-            }
+			scanner := bufio.NewScanner(reader)
+			for scanner.Scan() {
+				clogs = append(clogs, scanner.Text())
+			}
+			for i := len(clogs)/2 - 1; i >= 0; i-- {
+				opp := len(clogs) - 1 - i
+				clogs[i], clogs[opp] = clogs[opp], clogs[i]
+			}
+			if len(clogs) != 0 {
+				p2.Text = strings.Join(clogs[:5], "\n")
+			}
 
 			tickerCount += 1
 			ui.Render(grid)
