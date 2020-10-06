@@ -1,10 +1,13 @@
 package main
 
 import (
+    // "fmt"
 	"context"
+    "strings"
 	"log"
 	"sort"
 	"time"
+    "bufio"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -62,6 +65,10 @@ func main() {
 
 	defer ui.Close()
 
+	grid := ui.NewGrid()
+	termWidth, termHeight := ui.TerminalDimensions()
+	grid.SetRect(0, 0, termWidth, termHeight)
+
 	l := widgets.NewList()
 	l.Title = "Running Services"
 	l.TextStyle = ui.NewStyle(ui.ColorYellow)
@@ -69,9 +76,20 @@ func main() {
 	l.SetRect(0, 0, 60, 20)
 	l.Rows = ContainerStatusArray(cli, ctx)
 
+	p2 := widgets.NewParagraph()
+	p2.Text = ""
+	p2.Border = false
+	p2.SetRect(50, 10, 75, 10)
+	p2.TextStyle.Fg = ui.ColorClear
+
+	grid.Set(
+		ui.NewRow(1.0/2, ui.NewCol(1.0, l)),
+		ui.NewRow(1.0/2, ui.NewCol(1.0, p2)),
+	)
+
 	tickerCount := 1
 	uiEvents := ui.PollEvents()
-	ticker := time.NewTicker(2 * time.Second).C
+	ticker := time.NewTicker(time.Second).C
 	for {
 		select {
 		case e := <-uiEvents:
@@ -93,11 +111,31 @@ func main() {
 			case "G":
 				l.ScrollBottom()
 			}
-			ui.Render(l)
+			ui.Render(grid)
 		case <-ticker:
+            clogs := []string{}
 			l.Rows = ContainerStatusArray(cli, ctx)
+            selected := strings.Fields(l.Rows[l.SelectedRow])[0]
+            reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true})
+            if err != nil {
+                log.Fatal(err)
+            }
+            defer reader.Close()
+
+            scanner := bufio.NewScanner(reader)
+            for scanner.Scan() {
+                clogs = append(clogs, scanner.Text())
+            }
+            for i := len(clogs)/2-1; i >= 0; i-- {
+                opp := len(clogs)-1-i
+                clogs[i], clogs[opp] = clogs[opp], clogs[i]
+            }
+            if len(clogs) != 0 {
+                p2.Text = strings.Join(clogs[:5], "\n")
+            }
+
 			tickerCount += 1
-			ui.Render(l)
+			ui.Render(grid)
 		}
 	}
 }
