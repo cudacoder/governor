@@ -96,6 +96,9 @@ func main() {
 			switch e.ID {
 			case "q", "<C-c>":
 				return
+            case "r":
+                s := strings.Fields(l.Rows[l.SelectedRow])[0]
+                RestartDockerContainer(cli, ctx, s)
 			case "j":
 				l.ScrollDown()
 			case "k":
