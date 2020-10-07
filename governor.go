@@ -1,13 +1,15 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
+    "os"
 	"bufio"
 	"context"
 	"log"
 	"sort"
 	"strings"
 	"time"
+    "regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -15,6 +17,14 @@ import (
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 )
+
+func ReverseSlice(sl []string) ([]string) {
+    for i := len(sl)/2 - 1; i >= 0; i-- {
+        opp := len(sl) - 1 - i
+        sl[i], sl[opp] = sl[opp], sl[i]
+    }
+    return sl
+}
 
 func RestartDockerContainer(cli *client.Client, ctx context.Context, cid string) {
 	duration, _ := time.ParseDuration("1s")
@@ -78,6 +88,7 @@ func main() {
 
 	p2 := widgets.NewParagraph()
 	p2.Text = ""
+    p2.WrapText = false
 	p2.Border = false
 	p2.SetRect(50, 10, 75, 10)
 	p2.TextStyle.Fg = ui.ColorClear
@@ -89,7 +100,15 @@ func main() {
 
 	tickerCount := 1
 	uiEvents := ui.PollEvents()
-	ticker := time.NewTicker(time.Second).C
+	ticker := time.NewTicker(time.Second*3).C
+
+    f, err := os.OpenFile("text.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        log.Println(err)
+    }
+    defer f.Close()
+    logger := log.New(f, "", log.LstdFlags)
+
 	for {
 		select {
 		case e := <-uiEvents:
@@ -129,12 +148,23 @@ func main() {
 			for scanner.Scan() {
 				clogs = append(clogs, scanner.Text())
 			}
-			for i := len(clogs)/2 - 1; i >= 0; i-- {
-				opp := len(clogs) - 1 - i
-				clogs[i], clogs[opp] = clogs[opp], clogs[i]
-			}
+            clogs = ReverseSlice(clogs)
 			if len(clogs) != 0 {
-				p2.Text = strings.Join(clogs[:5], "\n")
+                text := strings.Join(clogs[:5], "\n")
+
+                reg, err := regexp.Compile("[^a-zA-Z0-9\\[\\]\\.\\s/!-{}-~]+")
+                if err != nil {
+                    log.Fatal(err)
+                }
+
+
+                for i := 0; i < 50; i++ {
+                    text = strings.Replace(text, fmt.Sprintf("[%dm", i), "", -1)
+                }
+
+                text = reg.ReplaceAllString(text, "")
+				p2.Text = text
+                logger.Println(text)
 			}
 
 			tickerCount += 1
