@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+    "regexp"
     "os"
 	"bufio"
 	"context"
@@ -9,7 +10,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-    "regexp"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -88,8 +88,8 @@ func main() {
 
 	p2 := widgets.NewParagraph()
 	p2.Text = ""
-    p2.WrapText = false
 	p2.Border = false
+    p2.WrapText = false
 	p2.SetRect(50, 10, 75, 10)
 	p2.TextStyle.Fg = ui.ColorClear
 
@@ -100,7 +100,7 @@ func main() {
 
 	tickerCount := 1
 	uiEvents := ui.PollEvents()
-	ticker := time.NewTicker(time.Second*3).C
+	ticker := time.NewTicker(time.Second).C
 
     f, err := os.OpenFile("text.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
@@ -138,7 +138,7 @@ func main() {
 			clogs := []string{}
 			l.Rows = ContainerStatusArray(cli, ctx)
 			selected := strings.Fields(l.Rows[l.SelectedRow])[0]
-			reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true})
+			reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true, Tail: "5"})
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -148,9 +148,8 @@ func main() {
 			for scanner.Scan() {
 				clogs = append(clogs, scanner.Text())
 			}
-            clogs = ReverseSlice(clogs)
 			if len(clogs) != 0 {
-                text := strings.Join(clogs[:5], "\n")
+                text := strings.Join(clogs, "\n")
 
                 reg, err := regexp.Compile("[^a-zA-Z0-9\\[\\]\\.\\s/!-{}-~]+")
                 if err != nil {
