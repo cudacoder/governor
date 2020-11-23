@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
-    "regexp"
-    "os"
 	"bufio"
 	"context"
+	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -18,12 +17,12 @@ import (
 	"github.com/gizak/termui/v3/widgets"
 )
 
-func ReverseSlice(sl []string) ([]string) {
-    for i := len(sl)/2 - 1; i >= 0; i-- {
-        opp := len(sl) - 1 - i
-        sl[i], sl[opp] = sl[opp], sl[i]
-    }
-    return sl
+func ReverseSlice(sl []string) []string {
+	for i := len(sl)/2 - 1; i >= 0; i-- {
+		opp := len(sl) - 1 - i
+		sl[i], sl[opp] = sl[opp], sl[i]
+	}
+	return sl
 }
 
 func RestartDockerContainer(cli *client.Client, ctx context.Context, cid string) {
@@ -89,7 +88,7 @@ func main() {
 	p2 := widgets.NewParagraph()
 	p2.Text = ""
 	p2.Border = false
-    p2.WrapText = false
+	p2.WrapText = false
 	p2.SetRect(50, 10, 75, 10)
 	p2.TextStyle.Fg = ui.ColorClear
 
@@ -101,13 +100,6 @@ func main() {
 	tickerCount := 1
 	uiEvents := ui.PollEvents()
 	ticker := time.NewTicker(time.Second).C
-
-    f, err := os.OpenFile("text.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    if err != nil {
-        log.Println(err)
-    }
-    defer f.Close()
-    logger := log.New(f, "", log.LstdFlags)
 
 	for {
 		select {
@@ -149,21 +141,19 @@ func main() {
 				clogs = append(clogs, scanner.Text())
 			}
 			if len(clogs) != 0 {
-                text := strings.Join(clogs, "\n")
+				text := strings.Join(clogs, "\n")
 
-                reg, err := regexp.Compile("[^a-zA-Z0-9\\[\\]\\.\\s/!-{}-~]+")
-                if err != nil {
-                    log.Fatal(err)
-                }
+				reg, err := regexp.Compile("[^a-zA-Z0-9\\[\\]\\.\\s/!-{}-~]+")
+				if err != nil {
+					log.Fatal(err)
+				}
 
+				for i := 0; i < 50; i++ {
+					text = strings.Replace(text, fmt.Sprintf("[%dm", i), "", -1)
+				}
 
-                for i := 0; i < 50; i++ {
-                    text = strings.Replace(text, fmt.Sprintf("[%dm", i), "", -1)
-                }
-
-                text = reg.ReplaceAllString(text, "")
+				text = reg.ReplaceAllString(text, "")
 				p2.Text = text
-                logger.Println(text)
 			}
 
 			tickerCount += 1
