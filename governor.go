@@ -130,7 +130,7 @@ func main() {
 			clogs := []string{}
 			l.Rows = ContainerStatusArray(cli, ctx)
 			selected := strings.Fields(l.Rows[l.SelectedRow])[0]
-			reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true, Tail: "5"})
+			reader, err := cli.ContainerLogs(ctx, selected, types.ContainerLogsOptions{ShowStdout: true, Tail: "25"})
 			if err != nil {
 				log.Fatal(err)
 			}
