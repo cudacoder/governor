@@ -1,4 +1,5 @@
 # governor
+
 A Docker container watcher, written in Go.
 
 ![Governor Demo](demo.gif)
@@ -6,7 +7,9 @@ A Docker container watcher, written in Go.
 **NOTE: This is a work in progress, and you are more than welcome to help and suggest improvements, I'm all ears!**
 
 This tool was born out of the frustration of managing a multi-container development environment.  
-Its sole purpose if to ease the management (start, stop, inspect etc.) of containers, and auto-recovery of failed containers.
+Its sole purpose if to ease the management of containers.
+
+Currently it only supports printing the logs from the container and restarting a running container using the `r` key.
 
 ## Installation
 
